@@ -10,7 +10,7 @@ services:
       - "9001:9001"
       - "9000:9000"
     volumes:
-      - ./minio/volumes/starrocks:/minio_data
+      - ./minio/volumes:/minio_data
     entrypoint: sh
     command: '-c ''mkdir -p /minio_data/starrocks && minio server /minio_data --console-address ":9001"'''
     healthcheck:
