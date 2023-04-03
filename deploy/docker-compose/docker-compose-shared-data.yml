@@ -10,7 +10,7 @@ services:
       - "9001:9001"
       - "9000:9000"
     volumes:
-      - ./minio/volumes:/minio_data
+      - starrocks-miniodata:/minio_data
     entrypoint: sh
     command: '-c ''mkdir -p /minio_data/starrocks && minio server /minio_data --console-address ":9001"'''
     healthcheck:
@@ -28,8 +28,8 @@ services:
     container_name: starrocks-fe
     user: root
     command: >
-      bash -c "echo run_mode=shared_data >> /opt/starrocks/fe/conf/fe.conf && 
-      echo cloud_native_meta_port=6090 >> /opt/starrocks/fe/conf/fe.conf && 
+      bash -c "echo run_mode=shared_data >> /opt/starrocks/fe/conf/fe.conf &&
+      echo cloud_native_meta_port=6090 >> /opt/starrocks/fe/conf/fe.conf &&
       echo aws_s3_path=starrocks >> /opt/starrocks/fe/conf/fe.conf &&
       echo aws_s3_endpoint=minio:9000 >> /opt/starrocks/fe/conf/fe.conf &&
       echo aws_s3_use_instance_profile=false >> /opt/starrocks/fe/conf/fe.conf &&
@@ -49,8 +49,8 @@ services:
       - minio
     volumes:
       # - ./starrocks/starrocks-fe/conf:/opt/starrocks/fe/conf
-      - ./starrocks/starrocks-fe/meta:/opt/starrocks/fe/meta
-      - ./starrocks/starrocks-fe/log:/opt/starrocks/fe/log
+      - starrocks-fe-meta:/opt/starrocks/fe/meta
+      - starrocks-fe-log:/opt/starrocks/fe/log
     networks:
       network:
         ipv4_address: 10.5.0.2
@@ -61,7 +61,7 @@ services:
       - /bin/bash
       - -c
       - |
-        sleep 15s; echo starlet_port = 8167 >> /opt/starrocks/be/conf/be.conf; 
+        sleep 15s; echo starlet_port = 8167 >> /opt/starrocks/be/conf/be.conf;
         mysql --connect-timeout 2 -h starrocks-fe -P9030 -uroot -e "alter system add backend \"starrocks-be:9050\";"
         /opt/starrocks/be/bin/start_be.sh
     ports:
@@ -79,12 +79,17 @@ services:
       retries: 3
     volumes:
 #      - be.conf:/opt/starrocks/be/conf/be.conf
-      # - ./starrocks/starrocks-be/storage:/opt/starrocks/be/storage
-      - ./starrocks/starrocks-be/log:/opt/starrocks/be/log
+      - starrocks-be-storage:/opt/starrocks/be/storage
+      - starrocks-be-log:/opt/starrocks/be/log
     networks:
       network:
         ipv4_address: 10.5.0.3
-
+volumes:
+  starrocks-be-storage:
+  starrocks-be-log:
+  starrocks-fe-meta:
+  starrocks-fe-log:
+  starrocks-miniodata:
 networks:
   network:
     driver: bridge
